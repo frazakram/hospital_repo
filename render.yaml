@@ -2,13 +2,14 @@ services:
   - type: web
     name: care-hospital
     env: python
-    buildCommand: |
-      mkdir -p dist
-      cp -r static dist/
-      cp -r templates dist/
-      pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
-    staticPublishPath: ./dist
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.11
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
