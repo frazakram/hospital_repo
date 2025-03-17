@@ -7,3 +7,4 @@ reportlab==4.1.0
 email-validator==2.1.0.post1
 python-dotenv==1.0.0
 gunicorn==21.2.0
+PyInstaller==6.10.0
