@@ -2,8 +2,13 @@ services:
   - type: web
     name: care-hospital
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      mkdir -p build
+      cp -r static build/
+      cp -r templates build/
+      pip install -r requirements.txt
     startCommand: gunicorn app:app
+    staticPublishPath: ./build
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.11
