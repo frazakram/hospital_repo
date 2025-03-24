@@ -10,13 +10,34 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 import io
-from config import Config
+import pickle
+import os
 
+# Load configuration from pickle file
+def load_config():
+    try:
+        with open('config.pkl', 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        raise Exception("Configuration file 'config.pkl' not found. Please run generate_config.py first.")
+
+# Initialize Flask application with pickle configuration
 app = Flask(__name__)
-app.config.from_object(Config)
+config = load_config()
+
+# Configure Flask application
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key_123')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{config["database_path"]}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+# Global settings from pickle config
+HOSPITAL_NAME = config['hospital_name']
+ADMIN_EMAIL = config['admin_email']
+SETTINGS = config['settings']
 
 # Models
 class Admin(UserMixin, db.Model):
@@ -253,13 +274,14 @@ def init_db():
     with app.app_context():
         db.create_all()
         # Create default admin if not exists
-        if not Admin.query.filter_by(email=Config.ADMIN_EMAIL).first():
+        if not Admin.query.filter_by(email=config['admin_email']).first():
             admin = Admin(
-                email=Config.ADMIN_EMAIL,
-                password_hash=generate_password_hash('admin123')
+                email=config['admin_email'],
+                password_hash=config['admin_password_hash']
             )
             db.session.add(admin)
             db.session.commit()
+            print(f'Admin user created with email: {config["admin_email"]}')
 
 if __name__ == '__main__':
     with app.app_context():
